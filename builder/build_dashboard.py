@@ -43,7 +43,12 @@ person=defaultdict(lambda: defaultdict(lambda: defaultdict(blank)))
 for r in data:
     if len(r)<37: r=r+['']*(37-len(r))
     if not any(c.strip() for c in r): continue
-    gen=(r[3] or '').strip(); month=(r[36] or '').strip() or '(月不明)'; name=(r[2] or '').strip()
+    gen=(r[3] or '').strip(); name=(r[2] or '').strip()
+    # 対象月：列37(索引36)が入っていればそれを使用。空なら日付列(索引1)から YYYY-MM を自動判別
+    month=(r[36] or '').strip()
+    if not month:
+        _m=re.match(r'^\s*(\d{4})[/\-.](\d{1,2})',(r[1] or ''))
+        month=f'{_m.group(1)}-{int(_m.group(2)):02d}' if _m else '(月不明)'
     if _norm(name) in EXCLUDE: continue   # 退職者は集計・アプリから完全除外
     cat='代理店' if gen=='代理店' else '支社'   # 本社・本社イベントは支社に合算
     add(agg[month][cat],r); add(agg[month]['総合'],r)
